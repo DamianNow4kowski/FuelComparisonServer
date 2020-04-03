@@ -14,14 +14,30 @@ object Start {
     @JvmStatic
     fun main(args: Array<String>) {
         val databaseHelper = DatabaseHelper
-        if (!databaseHelper.connect(Config.DB_ADDRESS, Config.DB_NAME, Config.DB_USER, Config.DB_PASSWORD)) {
-            logger.error("Cannot connect to database!")
-            exitProcess(1)
-        }
+
+        initDatabase(databaseHelper)
 
         val server = Server(HttpServer.create(InetSocketAddress(Config.SERVER_PORT), 0), databaseHelper)
         server.addContext("/example", ExampleHandler())
         server.addContext("/login", LoginHandler())
         server.start()
+    }
+
+    private fun initDatabase(databaseHelper: DatabaseHelper) {
+        if (!databaseHelper.connect(Config.DB_ADDRESS, Config.DB_USER, Config.DB_PASSWORD)) {
+            logger.error("Cannot connect to database!")
+            exitProcess(1)
+        }
+
+        if (databaseHelper.selectDatabase(Config.DB_NAME)) {
+            if (Config.CLEAR_DB_ON_START) {
+                databaseHelper.restartDatabase(Config.DB_NAME, Config.DB_SQL_FILE)
+                logger.info("Drop and create from file completed!")
+            }
+            logger.info("Selected existing database")
+        } else {
+            databaseHelper.createDatabase(Config.DB_NAME, Config.DB_SQL_FILE)
+            logger.info("Created a new database")
+        }
     }
 }
