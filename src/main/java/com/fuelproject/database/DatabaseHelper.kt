@@ -86,6 +86,9 @@ object DatabaseHelper {
         }
     }
 
+//    end database section
+
+    //    /login
     fun isUserActive(userID: Long): Boolean {
         val query = "SELECT active FROM user WHERE user_id = ?"
         return try {
@@ -157,6 +160,7 @@ object DatabaseHelper {
         }
     }
 
+    //    /register
     fun addNewUser(email: String?, username: String?, password: String?, isAgent: String?): Boolean {
         val currentDate = SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().time)
         val addUserQuery = "INSERT INTO user (username, password, email, token, joined, station_agent, superuser, active) VALUES (?, ?, ?, ?, ?, ?, 0, ?);"
@@ -189,6 +193,31 @@ object DatabaseHelper {
             stm.setString(2, email)
             val result = stm.executeQuery()
             !result.first()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    //    remindPassword
+    fun checkUniqueEmail(email: String?): Boolean {
+        val query = "SELECT * FROM user WHERE email = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setString(1, email)
+            val result = stm.executeQuery()
+            !result.first()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun updatePassword(email: String, password: String): Boolean {
+        val query = "UPDATE user SET password = '$password' WHERE email='$email'"
+        return try {
+            val stm = db!!.createStatement()
+            stm.execute(query)
         } catch (e: SQLException) {
             e.printStackTrace()
             false

@@ -2,6 +2,7 @@ import com.fuelproject.database.DatabaseHelper
 import com.fuelproject.handlers.ExampleHandler
 import com.fuelproject.handlers.LoginHandler
 import com.fuelproject.handlers.RegisterHandler
+import com.fuelproject.handlers.RemindPasswordHandler
 import com.sun.net.httpserver.HttpServer
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -22,6 +23,7 @@ object Start {
         server.addContext("/example", ExampleHandler())
         server.addContext("/login", LoginHandler())
         server.addContext("/register", RegisterHandler())
+        server.addContext("/remindPassword", RemindPasswordHandler())
         server.start()
     }
 
