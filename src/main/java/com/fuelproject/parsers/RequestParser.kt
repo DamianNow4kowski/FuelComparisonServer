@@ -1,46 +1,54 @@
 package com.fuelproject.parsers
 
+import com.fuelproject.http.RequestParams
 import com.sun.net.httpserver.HttpExchange
-import java.io.IOException
+import org.slf4j.LoggerFactory
+import java.io.UnsupportedEncodingException
+import java.net.URI
+import java.net.URLDecoder
 
 
-class RequestParser(exchange: HttpExchange) {
-    private val urlParams: MutableMap<String, String>
-    private val bodyParams: MutableMap<String, String>
-    private fun parse(exchange: HttpExchange) {
-        if (exchange.requestURI != null) parse(exchange.requestURI.query, urlParams)
-        if (exchange.requestBody != null) {
-            try {
-                parse(String(exchange.requestBody.readBytes()), bodyParams)
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-        }
+object RequestParser {
+    private lateinit var exchange: HttpExchange
+    private val logger = LoggerFactory.getLogger(javaClass)
+
+
+    fun parse(exchange: HttpExchange): RequestParams {
+        this.exchange = exchange
+        val params = RequestParams()
+        params.urlParams = parseURI()
+        params.bodyParams = parseBody()
+        return params
     }
 
-    private fun parse(value: String?, container: MutableMap<String, String>) {
-        if (value == null) return
+    private fun parseBody(): MutableMap<String, String> {
+        return parse(String(exchange.requestBody.readBytes()))
+    }
+
+    private fun parseURI(): MutableMap<String, String> {
+        val uri: URI? = exchange.requestURI
+        return parse(uri!!.rawQuery)
+    }
+
+    private fun parse(value: String): MutableMap<String, String> {
+        val container: MutableMap<String, String> = HashMap()
         for (param in value.split("&").toTypedArray()) {
-            val pair = param.split("=").toTypedArray()
+            val pair = param.split("=")
             if (pair.size > 1) {
-                container[pair[0]] = pair[1]
+                container[pair[0]] = decode(pair[1])
             } else {
                 container[pair[0]] = ""
             }
         }
+        return container
     }
 
-    fun getBodyParams(): Map<String, String> {
-        return bodyParams
-    }
-
-    fun getUrlParams(): Map<String, String> {
-        return urlParams
-    }
-
-    init {
-        urlParams = HashMap()
-        bodyParams = HashMap()
-        parse(exchange)
+    private fun decode(value: String): String {
+        return try {
+            URLDecoder.decode(value, "UTF-8").toString()
+        } catch (e: UnsupportedEncodingException) {
+            e.printStackTrace()
+            value
+        }
     }
 }

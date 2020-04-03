@@ -3,6 +3,7 @@ import com.fuelproject.factories.HttpServerFactory.create
 import com.fuelproject.handlers.ExampleHandler
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import kotlin.system.exitProcess
 
 object Start {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -10,10 +11,14 @@ object Start {
     @Throws(IOException::class)
     @JvmStatic
     fun main(args: Array<String>) {
-        val server = Server(create(8000))
+        val databaseHelper = DatabaseHelper
+        if (!databaseHelper.connect(Config.DB_ADDRESS, Config.DB_NAME, Config.DB_USER, Config.DB_PASSWORD)) {
+            logger.error("Cannot connect to database!")
+            exitProcess(1)
+        }
+
+        val server = Server(create(Config.SERVER_PORT), databaseHelper)
         server.addContext("/example", ExampleHandler())
-        if (DatabaseHelper.connect("localhost", "mob_java", "root", "")) {
-            server.start()
-        } else logger.error("Cannot connect to database!")
+        server.start()
     }
 }
