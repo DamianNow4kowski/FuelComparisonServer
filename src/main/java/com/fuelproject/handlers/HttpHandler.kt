@@ -5,8 +5,10 @@ import com.fuelproject.http.RequestParams
 import com.fuelproject.parsers.RequestParser
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
+import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.net.HttpURLConnection
 
 
 abstract class HttpHandler : HttpHandler {
@@ -34,6 +36,23 @@ abstract class HttpHandler : HttpHandler {
         val os = request!!.responseBody
         os.write(response.toByteArray())
         os.close()
+    }
+
+    @Throws(IOException::class)
+    open fun writeFailResponse(reason: String) {
+        val result = JSONObject()
+        result.put("status", HttpURLConnection.HTTP_INTERNAL_ERROR)
+        result.put("errorCode", HttpURLConnection.HTTP_BAD_REQUEST)
+        result.put("reason", reason)
+        writeResponse(result.toString())
+    }
+
+    @Throws(IOException::class)
+    open fun writeSuccessResponse(data: Any?) {
+        val result = JSONObject()
+        result.put("status", HttpURLConnection.HTTP_OK)
+        result.put("data", data)
+        writeResponse(result.toString())
     }
 
     fun databaseHelper(databaseHelper: DatabaseHelper) {

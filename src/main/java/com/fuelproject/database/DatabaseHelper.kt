@@ -1,5 +1,7 @@
 package com.fuelproject.database
 
+import com.fuelproject.data.LoginResult
+import com.fuelproject.data.UserInfo
 import com.mysql.cj.jdbc.MysqlDataSource
 import org.slf4j.LoggerFactory
 import java.sql.Connection
@@ -28,5 +30,29 @@ object DatabaseHelper {
             e.printStackTrace()
             false
         }
+    }
+
+    fun login(email: String?, password: String?): LoginResult? {
+        //TODO: implement real one
+        val loginResult = LoginResult()
+        if (email == "correct" && password == "correct_pwd") {
+            loginResult.status = true
+            loginResult.id = 12345
+        }
+        return loginResult
+    }
+
+    fun generateToken(id: Long?): String? {
+        //TODO: implement real one
+        return "TOOOKEN"
+    }
+
+    fun getUserInfo(id: Long?): UserInfo {
+        //TODO: implement real one
+        val userInfo = UserInfo()
+        userInfo.name = "User name"
+        userInfo.id = 12345
+        userInfo.email = "email@domain.com"
+        return userInfo
     }
 }

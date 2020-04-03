@@ -1,8 +1,10 @@
 import com.fuelproject.database.DatabaseHelper
-import com.fuelproject.factories.HttpServerFactory.create
 import com.fuelproject.handlers.ExampleHandler
+import com.fuelproject.handlers.LoginHandler
+import com.sun.net.httpserver.HttpServer
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.net.InetSocketAddress
 import kotlin.system.exitProcess
 
 object Start {
@@ -17,8 +19,9 @@ object Start {
             exitProcess(1)
         }
 
-        val server = Server(create(Config.SERVER_PORT), databaseHelper)
+        val server = Server(HttpServer.create(InetSocketAddress(Config.SERVER_PORT), 0), databaseHelper)
         server.addContext("/example", ExampleHandler())
+        server.addContext("/login", LoginHandler())
         server.start()
     }
 }
