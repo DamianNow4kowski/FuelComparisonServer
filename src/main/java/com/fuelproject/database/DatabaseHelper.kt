@@ -1,6 +1,5 @@
 package com.fuelproject.database
 
-import com.fuelproject.data.LoginResult
 import com.fuelproject.data.UserInfo
 import com.mysql.cj.jdbc.MysqlDataSource
 import org.apache.ibatis.jdbc.ScriptRunner
@@ -9,8 +8,11 @@ import java.io.BufferedReader
 import java.io.FileReader
 import java.io.Reader
 import java.sql.Connection
+import java.sql.ResultSet
 import java.sql.SQLException
 import java.sql.Statement
+import java.util.*
+import java.util.Optional.empty
 
 
 object DatabaseHelper {
@@ -85,14 +87,26 @@ object DatabaseHelper {
         }
     }
 
-    fun login(email: String?, password: String?): LoginResult? {
-        //TODO: implement real one
-        val loginResult = LoginResult()
-        if (email == "correct" && password == "correct_pwd") {
-            loginResult.status = true
-            loginResult.id = 12345
+    fun login(email: String?, password: String?): Optional<Long> {
+        val query = "SELECT user_id FROM user WHERE email = ? AND password = ?"
+
+        try {
+            val stm = db!!.prepareCall(query)
+            stm.setString(1, email)
+            stm.setString(2, password)
+            val result: ResultSet = stm.executeQuery()
+            if (result.first()) {
+                var id: Long = result.getLong("user_id")
+                result.close()
+                return Optional.of(id)
+            } else {
+                result.close()
+                return empty()
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            return empty()
         }
-        return loginResult
     }
 
     fun generateToken(id: Long?): String? {
@@ -100,12 +114,27 @@ object DatabaseHelper {
         return "TOOOKEN"
     }
 
-    fun getUserInfo(id: Long?): UserInfo {
-        //TODO: implement real one
-        val userInfo = UserInfo()
-        userInfo.name = "User name"
-        userInfo.id = 12345
-        userInfo.email = "email@domain.com"
-        return userInfo
+    fun getUserInfo(id: Long?): Optional<UserInfo> {
+        val query = "SELECT * FROM user WHERE user_id = ?"
+
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, id!!)
+            val result = stm.executeQuery()
+            if (result.first()) {
+                val info = UserInfo()
+                info.email = result.getString("email")
+                info.id = result.getLong("user_id")
+                info.name = result.getString("username")
+                info.token = result.getString("token")
+                result.close()
+                Optional.of(info)
+            } else {
+                empty()
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            empty()
+        }
     }
 }

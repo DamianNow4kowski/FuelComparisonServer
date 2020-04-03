@@ -1,10 +1,9 @@
 package com.fuelproject.handlers
 
-import com.fuelproject.data.LoginResult
 import com.fuelproject.data.UserInfo
 import org.json.JSONObject
 import java.io.IOException
-
+import java.util.*
 
 class LoginHandler : HttpHandler() {
     @Throws(IOException::class)
@@ -20,9 +19,9 @@ class LoginHandler : HttpHandler() {
 
     @Throws(IOException::class)
     private fun tryLogIn(email: String?, password: String?) {
-        val loginResult: LoginResult? = dbHelper!!.login(email, password)
-        if (loginResult!!.status) {
-            val data = prepareResponse(loginResult.id)
+        val loginResult: Optional<Long> = dbHelper!!.login(email, password)
+        if (loginResult.isPresent) {
+            val data = prepareResponse(loginResult.get())
             writeSuccessResponse(data)
         } else {
             writeFailResponse("Incorrect data")
@@ -36,10 +35,11 @@ class LoginHandler : HttpHandler() {
     private fun prepareResponse(id: Long): JSONObject {
         val data = JSONObject()
         data.put("token", dbHelper!!.generateToken(id))
-        val userInfo: UserInfo = dbHelper!!.getUserInfo(id)
+        val userInfo: UserInfo = dbHelper!!.getUserInfo(id).get()
         data.put("name", userInfo.name)
         data.put("id", userInfo.id)
         data.put("email", userInfo.email)
+        data.put("token", userInfo.token)
         return data
     }
 }
