@@ -5,6 +5,7 @@ import org.json.JSONObject
 import java.io.IOException
 import java.util.*
 
+
 class LoginHandler : HttpHandler() {
     @Throws(IOException::class)
     override fun handle() {
@@ -21,8 +22,12 @@ class LoginHandler : HttpHandler() {
     private fun tryLogIn(email: String?, password: String?) {
         val loginResult: Optional<Long> = dbHelper!!.login(email, password)
         if (loginResult.isPresent) {
-            val data = prepareResponse(loginResult.get())
-            writeSuccessResponse(data)
+            if (dbHelper!!.isUserActive(loginResult.get())) {
+                val data = prepareResponse(loginResult.get())
+                writeSuccessResponse(data)
+            } else {
+                writeFailResponse("Account is blocked")
+            }
         } else {
             writeFailResponse("Incorrect data")
         }

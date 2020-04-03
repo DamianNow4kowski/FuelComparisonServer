@@ -7,12 +7,11 @@ import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.Reader
-import java.sql.Connection
-import java.sql.ResultSet
-import java.sql.SQLException
-import java.sql.Statement
+import java.sql.*
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Optional.empty
+import java.util.UUID
 
 
 object DatabaseHelper {
@@ -87,6 +86,26 @@ object DatabaseHelper {
         }
     }
 
+    fun isUserActive(userID: Long): Boolean {
+        val query = "SELECT active FROM user WHERE user_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userID)
+            val result = stm.executeQuery()
+            if (result.first()) {
+                val isActive = result.getBoolean("active")
+                result.close()
+                isActive
+            } else {
+                result.close()
+                false
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     fun login(email: String?, password: String?): Optional<Long> {
         val query = "SELECT user_id FROM user WHERE email = ? AND password = ?"
 
@@ -135,6 +154,44 @@ object DatabaseHelper {
         } catch (e: SQLException) {
             e.printStackTrace()
             empty()
+        }
+    }
+
+    fun addNewUser(email: String?, username: String?, password: String?, isAgent: String?): Boolean {
+        val currentDate = SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().time)
+        val addUserQuery = "INSERT INTO user (username, password, email, token, joined, station_agent, superuser, active) VALUES (?, ?, ?, ?, ?, ?, 0, ?);"
+        val isAgentBool = java.lang.Boolean.parseBoolean(isAgent)
+        val isActive = !isAgentBool
+        return try {
+            val stm: CallableStatement = db!!.prepareCall(addUserQuery)
+            stm.setString(1, username)
+            stm.setString(2, password)
+            stm.setString(3, email)
+            stm.setString(4, UUID.randomUUID().toString().replace("-", ""))
+            stm.setString(5, currentDate)
+            stm.setBoolean(6, isAgentBool)
+            stm.setBoolean(7, isActive)
+            stm.executeUpdate()
+            stm.close()
+            logger.info("Added new user to db")
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun checkUniqueUsernameAndEmail(username: String?, email: String?): Boolean {
+        val query = "SELECT * FROM user WHERE username = ? OR email = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setString(1, username)
+            stm.setString(2, email)
+            val result = stm.executeQuery()
+            !result.first()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
         }
     }
 }
