@@ -30,14 +30,18 @@ object Start {
         }
 
         if (databaseHelper.selectDatabase(Config.DB_NAME)) {
+            logger.info("Clear DB on start: ${Config.CLEAR_DB_ON_START}")
             if (Config.CLEAR_DB_ON_START) {
-                databaseHelper.restartDatabase(Config.DB_NAME, Config.DB_SQL_FILE)
+                databaseHelper.dropDatabase(Config.DB_NAME)
+                databaseHelper.createDatabase(Config.DB_NAME)
+                databaseHelper.fillDatabase(Config.DB_SQL_FILE, Config.DB_NAME)
                 logger.info("Drop and create from file completed!")
+            } else {
+                logger.info("Selected existing database")
             }
-            logger.info("Selected existing database")
         } else {
-            databaseHelper.createDatabase(Config.DB_NAME, Config.DB_SQL_FILE)
-            logger.info("Created a new database")
+            databaseHelper.createDatabase(Config.DB_NAME)
+            databaseHelper.fillDatabase(Config.DB_SQL_FILE, Config.DB_NAME)
         }
     }
 }

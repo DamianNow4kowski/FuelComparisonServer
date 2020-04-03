@@ -7,12 +7,10 @@ import org.apache.ibatis.jdbc.ScriptRunner
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.FileReader
-import java.io.IOException
 import java.io.Reader
 import java.sql.Connection
 import java.sql.SQLException
 import java.sql.Statement
-import java.util.*
 
 
 object DatabaseHelper {
@@ -45,38 +43,36 @@ object DatabaseHelper {
             logger.info("Selected DB: '${databaseName}'")
             true
         } catch (e: SQLException) {
-            e.printStackTrace()
+//            e.printStackTrace()
             false
         }
     }
 
-    fun restartDatabase(databaseName: String, fileName: String?) {
+    fun dropDatabase(databaseName: String) {
         val query = "DROP DATABASE IF EXISTS `$databaseName`;"
         try {
             val stm: Statement = db!!.createStatement()
             stm.execute(query)
-            logger.info("Dropped $databaseName")
+            logger.info("Dropped '$databaseName'")
         } catch (e: SQLException) {
             e.printStackTrace()
         }
-        createDatabase(databaseName, fileName)
     }
 
-    fun createDatabase(databaseName: String, fileName: String?) {
+    fun createDatabase(databaseName: String) {
         val query = "CREATE DATABASE `$databaseName`; "
+        logger.info("Creating database '$databaseName'...")
         try {
             val stm = db!!.createStatement()
             stm.execute(query)
             stm.close()
-            logger.info("Created database $databaseName")
+            logger.info("Created database '$databaseName'")
         } catch (e: Exception) {
             e.printStackTrace()
         }
-        fillDatabase(fileName, databaseName)
     }
 
-    private fun fillDatabase(fileName: String?, databaseName: String) {
-        val query_create = "CREATE DATABASE ${databaseName}; "
+    fun fillDatabase(fileName: String?, databaseName: String) {
         try {
             db!!.createStatement().executeQuery("USE `${databaseName}`;")
             val sr = ScriptRunner(db)
@@ -87,24 +83,6 @@ object DatabaseHelper {
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    @Throws(IOException::class)
-    private fun readFile(fileName: String): LinkedList<String> {
-        val queries = LinkedList<String>()
-        var content = ""
-        val reader = BufferedReader(FileReader(fileName))
-        var line: String? = null
-        while (reader.readLine().also { line = it } != null) {
-            if (!line!!.startsWith("--") && !line!!.startsWith("/*")) {
-                content += line
-                if (line!!.endsWith(";")) {
-                    queries.add(content)
-                    content = ""
-                }
-            }
-        }
-        return queries
     }
 
     fun login(email: String?, password: String?): LoginResult? {
