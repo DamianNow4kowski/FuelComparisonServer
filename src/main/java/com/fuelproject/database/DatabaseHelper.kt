@@ -1,5 +1,7 @@
 package com.fuelproject.database
 
+import com.fuelproject.data.Comment
+import com.fuelproject.data.GasStation
 import com.fuelproject.data.UserInfo
 import com.mysql.cj.jdbc.MysqlDataSource
 import org.apache.ibatis.jdbc.ScriptRunner
@@ -221,6 +223,131 @@ object DatabaseHelper {
         } catch (e: SQLException) {
             e.printStackTrace()
             false
+        }
+    }
+
+    //    gaz station
+    fun addNewGasStation(gasStation: GasStation): Boolean {
+        val currentDate = SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().time)
+        val insertQuery = "INSERT INTO gas_station(agent_id, name, address, added_on, electric_charging," +
+                "accepted, for_disabled_people, lat, lng) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)"
+
+        try {
+            var newStationId: Int = -1
+            db!!.prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS).use { statement ->
+                statement.setInt(1, 0)
+                statement.setString(2, gasStation.name)
+                statement.setString(3, gasStation.address)
+                statement.setString(4, currentDate)
+                statement.setBoolean(5, gasStation.isForElectricCars)
+                statement.setBoolean(6, false)
+                statement.setBoolean(7, gasStation.isForDisabledPeople)
+                statement.setDouble(8, gasStation.latitude)
+                statement.setDouble(9, gasStation.longitude)
+
+                val rs = statement.generatedKeys
+                if (rs.next()) {
+                    newStationId = rs.getInt(1)
+                }
+                return newStationId > 0 &&
+                        addGasStationOpeningHours(newStationId, gasStation.openFrom, gasStation.openTo) &&
+                        addGasStationAvailablePetrol(newStationId, gasStation)
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            return false
+        }
+    }
+
+    //    comment
+    open fun getComments(gasStationId: Long): MutableList<Comment> {
+        val query = "SELECT * FROM comment WHERE station_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, gasStationId)
+            val results = stm.executeQuery()
+            val comments: MutableList<Comment> = LinkedList<Comment>()
+            while (results.next()) {
+                val comment = Comment()
+                comment.id = results.getLong("comment_id")
+                comment.user_id = results.getLong("user_id")
+                comment.station_id = results.getLong("station_id")
+                comment.rating = results.getLong("rating")
+                comment.content = results.getString("content")
+                comments.add(comment)
+            }
+            results.close()
+            comments
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            return LinkedList<Comment>()
+        }
+    }
+
+    fun retrieveGasStations(latNorth: Double, latSouth: Double,
+                            longEast: Double, longWest: Double): List<GasStation>? {
+        val stations: MutableList<GasStation> = LinkedList()
+        val query = "SELECT * FROM gas_station WHERE lat BETWEEN ? AND ? AND lng BETWEEN ? AND ?"
+        try {
+            db!!.prepareCall(query).use { statement ->
+                statement.setDouble(1, latSouth)
+                statement.setDouble(2, latNorth)
+                statement.setDouble(3, longWest)
+                statement.setDouble(4, longEast)
+                val result = statement.executeQuery()
+                while (result.next()) {
+                    val gasStation = GasStation()
+                    gasStation.id = result.getInt("station_id").toLong()
+                    gasStation.name = result.getString("name")
+                    gasStation.address = result.getString("address")
+                    gasStation.isForElectricCars = result.getBoolean("electric_charging")
+                    gasStation.isForDisabledPeople = result.getBoolean("for_disabled_people")
+                    gasStation.latitude = result.getDouble("lat")
+                    gasStation.longitude = result.getDouble("lng")
+                    fillGasStationsOpeningHours(gasStation)
+                    stations.add(gasStation)
+                }
+                result.close()
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+        return stations
+    }
+
+    private fun addGasStationOpeningHours(gasStationId: Int, openFrom: String, openTo: String): Boolean {
+        val insertQuery = "INSERT INTO opening_hours(station_id, start_time, end_time) VALUES(?, ?, ?)"
+        try {
+            db!!.prepareStatement(insertQuery).use { statement ->
+                statement.setInt(1, gasStationId)
+                statement.setString(2, openFrom)
+                statement.setString(3, openTo)
+                statement.executeUpdate()
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            return false
+        }
+        return true
+    }
+
+    private fun addGasStationAvailablePetrol(gasStationId: Int, gasStation: GasStation): Boolean {
+        return true // TODO
+    }
+
+    private fun fillGasStationsOpeningHours(gasStation: GasStation) {
+        val query = "SELECT * FROM opening_hours WHERE station_id = ?"
+        try {
+            db!!.prepareCall(query).use { statement ->
+                statement.setLong(1, gasStation.id)
+                val result = statement.executeQuery()
+                if (result.next()) {
+                    gasStation.openFrom = result.getString("start_time")
+                    gasStation.openTo = result.getString("end_time")
+                }
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
         }
     }
 }

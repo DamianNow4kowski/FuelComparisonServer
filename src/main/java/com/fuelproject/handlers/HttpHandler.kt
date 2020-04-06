@@ -8,12 +8,13 @@ import com.sun.net.httpserver.HttpHandler
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.io.OutputStream
 import java.net.HttpURLConnection
 
 
 abstract class HttpHandler : HttpHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
-    var request: HttpExchange? = null
+    private var request: HttpExchange? = null
     var params: RequestParams? = null
     var dbHelper: DatabaseHelper? = null
 
@@ -31,10 +32,11 @@ abstract class HttpHandler : HttpHandler {
     }
 
     @Throws(IOException::class)
-    fun writeResponse(response: String) {
-        request!!.sendResponseHeaders(200, response.length.toLong())
-        val os = request!!.responseBody
-        os.write(response.toByteArray())
+    open fun writeResponse(response: String) {
+        val responseRaw = response.toByteArray(charset("UTF-8"))
+        request!!.sendResponseHeaders(200, responseRaw.size.toLong())
+        val os: OutputStream = request!!.responseBody
+        os.write(responseRaw)
         os.close()
     }
 

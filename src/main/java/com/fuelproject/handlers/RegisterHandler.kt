@@ -1,5 +1,6 @@
 package com.fuelproject.handlers
 
+import com.mysql.cj.util.StringUtils.isNullOrEmpty
 import org.json.JSONObject
 import java.io.IOException
 
@@ -32,10 +33,6 @@ class RegisterHandler : HttpHandler() {
         } else {
             writeFailResponse("Username or email taken")
         }
-    }
-
-    private fun isNullOrEmpty(value: String?): Boolean {
-        return value == null || value.isEmpty()
     }
 
     private fun prepareResponse(isAgent: Boolean): JSONObject {

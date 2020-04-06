@@ -1,6 +1,7 @@
 package com.fuelproject.handlers
 
 import com.fuelproject.data.UserInfo
+import com.mysql.cj.util.StringUtils.isNullOrEmpty
 import org.json.JSONObject
 import java.io.IOException
 import java.util.*
@@ -33,13 +34,9 @@ class LoginHandler : HttpHandler() {
         }
     }
 
-    private fun isNullOrEmpty(value: String?): Boolean {
-        return value == null || value.isEmpty()
-    }
-
     private fun prepareResponse(id: Long): JSONObject {
         val data = JSONObject()
-        data.put("token", dbHelper!!.generateToken(id))
+
         val userInfo: UserInfo = dbHelper!!.getUserInfo(id).get()
         data.put("name", userInfo.name)
         data.put("id", userInfo.id)

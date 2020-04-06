@@ -1,13 +1,11 @@
 import com.fuelproject.database.DatabaseHelper
-import com.fuelproject.handlers.ExampleHandler
-import com.fuelproject.handlers.LoginHandler
-import com.fuelproject.handlers.RegisterHandler
-import com.fuelproject.handlers.RemindPasswordHandler
+import com.fuelproject.handlers.*
 import com.sun.net.httpserver.HttpServer
 import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.net.InetSocketAddress
 import kotlin.system.exitProcess
+
 
 object Start {
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -20,10 +18,12 @@ object Start {
         initDatabase(databaseHelper)
 
         val server = Server(HttpServer.create(InetSocketAddress(Config.SERVER_PORT), 0), databaseHelper)
-        server.addContext("/example", ExampleHandler())
         server.addContext("/login", LoginHandler())
         server.addContext("/register", RegisterHandler())
         server.addContext("/remindPassword", RemindPasswordHandler())
+        server.addContext("/addStation", AddGasStationHandler())
+        server.addContext("/retrieveStations", RetrieveGasStationsHandler())
+        server.addContext("/getComments", CommentsHandler())
         server.start()
     }
 

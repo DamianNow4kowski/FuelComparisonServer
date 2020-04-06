@@ -3,6 +3,7 @@ package com.fuelproject.handlers
 import com.fuelproject.data.UserInfo
 import com.fuelproject.helpers.PasswordGenerator
 import com.fuelproject.helpers.RemindPasswordEmail
+import com.mysql.cj.util.StringUtils.isNullOrEmpty
 import org.json.JSONObject
 import java.io.IOException
 
@@ -45,9 +46,5 @@ class RemindPasswordHandler : HttpHandler() {
         val userInfo: UserInfo = dbHelper!!.getUserInfo(id).get()
         data.put("name", userInfo.name)
         return data
-    }
-
-    private fun isNullOrEmpty(value: String?): Boolean {
-        return value == null || value.isEmpty()
     }
 }
