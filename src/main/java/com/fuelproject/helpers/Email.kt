@@ -14,28 +14,32 @@ abstract class Email internal constructor() {
     var password: String? = null
     var messageSubject: String? = null
     var messageContent: String? = null
+    private var mailSession: Session? = null
+    private var props: Properties = Properties()
 
-    fun sendEmail(to: String?) {
-        val props = Properties()
+    init {
         props["mail.transport.protocol"] = "smtps"
         props["mail.smtps.auth"] = "true"
         // Zainicjowanie sesji
-        val mailSession: Session = Session.getDefaultInstance(props)
-        // mailSession.setDebug(true);
+        mailSession = Session.getDefaultInstance(props)
+    }
 
+    fun sendEmail(to: String?): Boolean {
         // Tworzenie wiadomości email
         val message = MimeMessage(mailSession)
-        try {
+        return try {
             message.subject = messageSubject
             message.setContent(messageContent, "text/plain; charset=ISO-8859-2")
             message.addRecipient(Message.RecipientType.TO, InternetAddress(to))
-            val transport: Transport = mailSession.getTransport()
+            val transport: Transport = mailSession!!.transport
             transport.connect(host, port, from, password)
             // wysłanie wiadomości
             transport.sendMessage(message, message.getRecipients(Message.RecipientType.TO))
             transport.close()
+            true
         } catch (e: MessagingException) {
             e.printStackTrace()
+            false
         }
     }
 

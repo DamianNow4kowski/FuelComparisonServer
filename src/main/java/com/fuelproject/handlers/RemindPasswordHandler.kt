@@ -1,6 +1,5 @@
 package com.fuelproject.handlers
 
-import com.fuelproject.data.UserInfo
 import com.fuelproject.helpers.PasswordGenerator
 import com.fuelproject.helpers.RemindPasswordEmail
 import com.mysql.cj.util.StringUtils.isNullOrEmpty
@@ -24,15 +23,18 @@ class RemindPasswordHandler : HttpHandler() {
 
     @Throws(IOException::class)
     private fun changePassword(email: String) {
-        val isEmailUnique: Boolean = dbHelper!!.checkUniqueEmail(email)
-        if (!isEmailUnique) {
+        val isEmailInDB: Boolean = dbHelper!!.isEmailInDB(email)
+        if (!isEmailInDB) {
             val passwordGenerator = PasswordGenerator()
             newPassword = passwordGenerator.generatePassword(8)
-            if (!dbHelper!!.updatePassword(email, newPassword!!)) {
-                val r = RemindPasswordEmail(newPassword!!)
-                r.sendEmail(email)
-                val data = prepareResponse(2)
-                writeSuccessResponse(data)
+
+            val r = RemindPasswordEmail(newPassword!!)
+
+            if (r.sendEmail(email)) {
+                if (!dbHelper!!.updatePassword(email, newPassword!!)) {
+                    val data: JSONObject = prepareResponse(email)
+                    writeSuccessResponse(data)
+                }
             } else {
                 writeFailResponse("Incorrect data")
             }
@@ -41,10 +43,9 @@ class RemindPasswordHandler : HttpHandler() {
         }
     }
 
-    private fun prepareResponse(id: Long): JSONObject {
+    fun prepareResponse(email: String): JSONObject {
         val data = JSONObject()
-        val userInfo: UserInfo = dbHelper!!.getUserInfo(id).get()
-        data.put("name", userInfo.name)
+        data.put("email", email)
         return data
     }
 }

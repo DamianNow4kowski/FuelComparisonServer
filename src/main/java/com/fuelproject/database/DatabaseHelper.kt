@@ -1,6 +1,7 @@
 package com.fuelproject.database
 
 import com.fuelproject.data.Comment
+import com.fuelproject.data.Fuel
 import com.fuelproject.data.GasStation
 import com.fuelproject.data.UserInfo
 import com.mysql.cj.jdbc.MysqlDataSource
@@ -10,6 +11,7 @@ import java.io.BufferedReader
 import java.io.FileReader
 import java.io.Reader
 import java.sql.*
+import java.sql.Date
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Optional.empty
@@ -187,14 +189,14 @@ object DatabaseHelper {
         }
     }
 
-    fun checkUniqueUsernameAndEmail(username: String?, email: String?): Boolean {
+    fun isUsernameOrEmailInDB(username: String?, email: String?): Boolean {
         val query = "SELECT * FROM user WHERE username = ? OR email = ?"
         return try {
             val stm = db!!.prepareCall(query)
             stm.setString(1, username)
             stm.setString(2, email)
             val result = stm.executeQuery()
-            !result.first()
+            result.first()
         } catch (e: SQLException) {
             e.printStackTrace()
             false
@@ -202,16 +204,16 @@ object DatabaseHelper {
     }
 
     //    remindPassword
-    fun checkUniqueEmail(email: String?): Boolean {
+    fun isEmailInDB(email: String?): Boolean {
         val query = "SELECT * FROM user WHERE email = ?"
         return try {
             val stm = db!!.prepareCall(query)
             stm.setString(1, email)
             val result = stm.executeQuery()
-            !result.first()
+            result.first()
         } catch (e: SQLException) {
             e.printStackTrace()
-            false
+            true
         }
     }
 
@@ -332,7 +334,17 @@ object DatabaseHelper {
     }
 
     private fun addGasStationAvailablePetrol(gasStationId: Int, gasStation: GasStation): Boolean {
-        return true // TODO
+//        String insertQuery = "INSERT INTO fuel_price(station_id, start_time, end_time) VALUES(?, ?, ?)";
+//        try (PreparedStatement statement = db.prepareStatement(insertQuery)) {
+//            statement.setInt(1, gasStationId);
+//            statement.setString(2, openFrom);
+//            statement.setString(3, openTo);
+//            statement.executeUpdate();
+//        } catch (SQLException e) {
+//            e.printStackTrace();
+//            return false;
+//        }
+        return true
     }
 
     private fun fillGasStationsOpeningHours(gasStation: GasStation) {
@@ -350,4 +362,85 @@ object DatabaseHelper {
             e.printStackTrace()
         }
     }
+
+
+    //    fuel
+    fun getFuels(gasStationId: Long): MutableList<Fuel> {
+        val query = "SELECT af.available_fuel_id, fk.name, fp.price " +
+                "FROM available_fuel af " +
+                "JOIN fuel_kind fk ON af.fuel_kind_id = fk.fuel_kind_id " +
+                "JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id " +
+                "WHERE af.station_id = ? " +
+                "AND fp.rating = (SELECT max(rating) FROM fuel_price fp2 where available_fuel_id = af.available_fuel_id)"
+
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, gasStationId)
+            val results = stm.executeQuery()
+            val fuels: MutableList<Fuel> = LinkedList()
+            while (results.next()) {
+                val fuel = Fuel()
+                fuel.fuelId = results.getLong("available_fuel_id")
+                fuel.price = results.getFloat("price")
+                fuel.name = results.getString("name")
+                fuels.add(fuel)
+            }
+            results.close()
+            fuels
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            LinkedList()
+        }
+    }
+
+    fun priceAlreadyGivenToday(fuelId: String, price: String, date: String?): Boolean {
+        val query = "SELECT * FROM available_fuel af " +
+                "LEFT JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id " +
+                "WHERE af.available_fuel_id = ? AND fp.price = ? AND added_on = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, fuelId.toLong())
+            stm.setDouble(2, price.toDouble())
+            stm.setDate(3, Date.valueOf(date))
+            val result = stm.executeQuery()
+            result.first()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun updateFuelPrice(fuelId: String, price: String, date: String?): Boolean {
+        val query = "UPDATE fuel_price fp " +
+                "JOIN available_fuel af ON fp.available_fuel_id = af.available_fuel_id " +
+                "SET fp.rating = fp.rating + 1 " +
+                "WHERE af.available_fuel_id = ? AND fp.price = ? AND fp.added_on = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, fuelId.toLong())
+            stm.setDouble(2, price.toDouble())
+            stm.setDate(3, Date.valueOf(date))
+            val result = stm.executeUpdate()
+            result > 0
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun addNewFuelPrice(fuelId: String, price: String?, date: String?): Boolean {
+        val query = "INSERT INTO `fuel_price` (`available_fuel_id`, `price`, `added_on`) VALUES (?, ?, ?)"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, fuelId.toLong())
+            stm.setString(2, price)
+            stm.setDate(3, Date.valueOf(date))
+            val result = stm.executeUpdate()
+            result > 0
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
 }

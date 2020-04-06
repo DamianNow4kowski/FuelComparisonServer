@@ -23,7 +23,9 @@ object Start {
         server.addContext("/remindPassword", RemindPasswordHandler())
         server.addContext("/addStation", AddGasStationHandler())
         server.addContext("/retrieveStations", RetrieveGasStationsHandler())
+        server.addContext("/getFuels", FuelsHandler())
         server.addContext("/getComments", CommentsHandler())
+        server.addContext("/addFuelPrice", AddFuelPriceHandler())
         server.start()
     }
 

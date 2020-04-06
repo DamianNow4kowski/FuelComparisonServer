@@ -21,8 +21,8 @@ class RegisterHandler : HttpHandler() {
 
     @Throws(IOException::class)
     private fun addNewUser(email: String?, username: String?, password: String?, isAgent: String?) {
-        val isUsernameAndEmailUnique: Boolean = dbHelper!!.checkUniqueUsernameAndEmail(username, email)
-        if (isUsernameAndEmailUnique) {
+        val isUsernameOrEmailInDB: Boolean = dbHelper!!.isUsernameOrEmailInDB(email, username)
+        if (!isUsernameOrEmailInDB) {
             val registerResult: Boolean = dbHelper!!.addNewUser(email, username, password, isAgent)
             if (registerResult) {
                 val data = prepareResponse(java.lang.Boolean.parseBoolean(isAgent))
