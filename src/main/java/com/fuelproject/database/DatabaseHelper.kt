@@ -286,6 +286,22 @@ object DatabaseHelper {
         }
     }
 
+    fun addNewComment(userID: String, stationID: String, body: String?, rate: String): Boolean {
+        val query = "INSERT INTO `comment` (`user_id`, `station_id`, `rating`, `content`) VALUES (?, ?, ?, ?)"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userID.toLong())
+            stm.setLong(2, stationID.toLong())
+            stm.setInt(3, rate.toInt())
+            stm.setString(4, body)
+            val result = stm.executeUpdate()
+            result > 0
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     fun retrieveGasStations(latNorth: Double, latSouth: Double,
                             longEast: Double, longWest: Double): List<GasStation>? {
         val stations: MutableList<GasStation> = LinkedList()

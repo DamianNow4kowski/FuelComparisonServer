@@ -25,6 +25,7 @@ object Start {
         server.addContext("/retrieveStations", RetrieveGasStationsHandler())
         server.addContext("/getFuels", FuelsHandler())
         server.addContext("/getComments", CommentsHandler())
+        server.addContext("/addComment", SubmitCommentHandler())
         server.addContext("/addFuelPrice", AddFuelPriceHandler())
         server.start()
     }
