@@ -15,12 +15,23 @@ class SubmitCommentHandler : HttpHandler() {
 
     @Throws(IOException::class)
     private fun addNewComment(userID: String?, stationID: String?, commentBody: String?, commentRate: String?) {
-        val addCommentResult: Boolean = dbHelper!!.addNewComment(userID!!, stationID!!, commentBody, commentRate!!)
-        if (addCommentResult) {
-            val responseContent = java.lang.Boolean.toString(true)
-            writeSuccessResponse(responseContent)
+        val updateComment: Boolean = dbHelper!!.userAlreadyCommented(userID!!, stationID!!)
+        if (!updateComment) {
+            val addCommentResult: Boolean = dbHelper!!.addNewComment(userID, stationID, commentBody, commentRate!!)
+            if (addCommentResult) {
+                val responseContent = java.lang.Boolean.toString(true)
+                writeSuccessResponse(responseContent)
+            } else {
+                writeFailResponse("Adding incorrect data")
+            }
         } else {
-            writeFailResponse("Incorrect data")
+            val updateCommentResult: Boolean = dbHelper!!.updateUserComment(userID, stationID, commentBody, commentRate!!)
+            if (updateCommentResult) {
+                val responseContent = java.lang.Boolean.toString(true)
+                writeSuccessResponse(responseContent)
+            } else {
+                writeFailResponse("Update incorrect data")
+            }
         }
     }
 }

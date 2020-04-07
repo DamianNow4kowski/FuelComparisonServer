@@ -13,6 +13,8 @@ import java.io.Reader
 import java.sql.*
 import java.sql.Date
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.Optional.empty
 import java.util.UUID
@@ -213,7 +215,7 @@ object DatabaseHelper {
             result.first()
         } catch (e: SQLException) {
             e.printStackTrace()
-            true
+            false
         }
     }
 
@@ -222,6 +224,7 @@ object DatabaseHelper {
         return try {
             val stm = db!!.createStatement()
             stm.execute(query)
+            true
         } catch (e: SQLException) {
             e.printStackTrace()
             false
@@ -294,6 +297,64 @@ object DatabaseHelper {
             stm.setLong(2, stationID.toLong())
             stm.setInt(3, rate.toInt())
             stm.setString(4, body)
+            val result = stm.executeUpdate()
+            result > 0
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun userAlreadyCommented(userID: String, stationID: String): Boolean {
+        val query = "SELECT * FROM comment WHERE user_id = ? and station_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userID.toLong())
+            stm.setLong(2, stationID.toLong())
+            val result = stm.executeQuery()
+            result.first()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun updateUserComment(userID: String, stationID: String, body: String?, rate: String): Boolean {
+        val query = "UPDATE comment comm set comm.content = ?, comm.rating = ? WHERE user_id=? and station_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setString(1, body)
+            stm.setInt(2, rate.toInt())
+            stm.setLong(3, userID.toLong())
+            stm.setLong(4, stationID.toLong())
+            val result = stm.executeUpdate()
+            result > 0
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun checkStationAgent(userID: String, stationID: String): Boolean {
+        val query = "SELECT u.active FROM user u join gas_station gs on u.user_id=gs.agent_id where u.user_id=? and gs.station_id=?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userID.toLong())
+            stm.setLong(2, stationID.toLong())
+            val result = stm.executeQuery()
+            result.first()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun updateStationDescription(stationID: String, content: String?): Boolean {
+        val query = "Update gas_station gs set gs.description = ? where gs.station_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setString(1, content)
+            stm.setLong(2, stationID.toLong())
             val result = stm.executeUpdate()
             result > 0
         } catch (e: SQLException) {
@@ -382,16 +443,22 @@ object DatabaseHelper {
 
     //    fuel
     fun getFuels(gasStationId: Long): MutableList<Fuel> {
+        val dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        val localDate = LocalDate.now()
+
         val query = "SELECT af.available_fuel_id, fk.name, fp.price " +
                 "FROM available_fuel af " +
                 "JOIN fuel_kind fk ON af.fuel_kind_id = fk.fuel_kind_id " +
-                "JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id " +
+                "LEFT JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id AND fp.added_on = ? " +
                 "WHERE af.station_id = ? " +
-                "AND fp.rating = (SELECT max(rating) FROM fuel_price fp2 where available_fuel_id = af.available_fuel_id)"
+                "AND (fp.rating IS NULL " +
+                "OR fp.rating = (SELECT max(rating) FROM fuel_price fp2 where available_fuel_id = af.available_fuel_id))" +
+                "GROUP BY af.available_fuel_id"
 
         return try {
             val stm = db!!.prepareCall(query)
-            stm.setLong(1, gasStationId)
+            stm.setDate(1, Date.valueOf(dtf.format(localDate)));
+            stm.setLong(2, gasStationId);
             val results = stm.executeQuery()
             val fuels: MutableList<Fuel> = LinkedList()
             while (results.next()) {

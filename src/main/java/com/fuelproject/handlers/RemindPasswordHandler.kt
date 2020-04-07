@@ -24,14 +24,14 @@ class RemindPasswordHandler : HttpHandler() {
     @Throws(IOException::class)
     private fun changePassword(email: String) {
         val isEmailInDB: Boolean = dbHelper!!.isEmailInDB(email)
-        if (!isEmailInDB) {
+        if (isEmailInDB) {
             val passwordGenerator = PasswordGenerator()
             newPassword = passwordGenerator.generatePassword(8)
 
             val r = RemindPasswordEmail(newPassword!!)
 
             if (r.sendEmail(email)) {
-                if (!dbHelper!!.updatePassword(email, newPassword!!)) {
+                if (dbHelper!!.updatePassword(email, newPassword!!)) {
                     val data: JSONObject = prepareResponse(email)
                     writeSuccessResponse(data)
                 }
