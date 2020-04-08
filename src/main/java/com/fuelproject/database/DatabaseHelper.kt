@@ -142,6 +142,18 @@ object DatabaseHelper {
         return "TOOOKEN"
     }
 
+    fun deleteAccount(email: String): Boolean {
+        val query = " DELETE from user WHERE email='$email'"
+        return try {
+            val stm = db!!.createStatement()
+            stm.execute(query)
+            true
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     fun getUserInfo(id: Long?): Optional<UserInfo> {
         val query = "SELECT * FROM user WHERE user_id = ?"
 
@@ -346,6 +358,21 @@ object DatabaseHelper {
         } catch (e: SQLException) {
             e.printStackTrace()
             false
+        }
+    }
+
+    fun isUserStationAgent(userID: String): Long {
+        val query = "Select gs.station_id from gas_station gs where gs.agent_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userID.toLong())
+            val result = stm.executeQuery()
+            if (result.first()) {
+                result.getLong("station_id")
+            } else -1
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            -1
         }
     }
 

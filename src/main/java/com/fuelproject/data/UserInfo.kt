@@ -5,4 +5,5 @@ class UserInfo {
     var email: String? = null
     var name: String? = null
     var token: String? = null
+    var stationAgentID: Long = 0
 }

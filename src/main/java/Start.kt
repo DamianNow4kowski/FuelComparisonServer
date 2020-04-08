@@ -21,6 +21,7 @@ object Start {
         server.addContext("/login", LoginHandler())
         server.addContext("/register", RegisterHandler())
         server.addContext("/remindPassword", RemindPasswordHandler())
+        server.addContext("/deleteAccount", DeleteAccountHandler())
         server.addContext("/addStation", AddGasStationHandler())
         server.addContext("/retrieveStations", RetrieveGasStationsHandler())
         server.addContext("/updateDescription", UpdateStationDescriptionHandler())

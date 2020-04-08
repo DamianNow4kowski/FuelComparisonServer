@@ -42,6 +42,9 @@ class LoginHandler : HttpHandler() {
         data.put("id", userInfo.id)
         data.put("email", userInfo.email)
         data.put("token", userInfo.token)
+
+        val stationAgentID: Long = dbHelper!!.isUserStationAgent(userInfo.id.toString())
+        data.put("stationAgentID", stationAgentID)
         return data
     }
 }
