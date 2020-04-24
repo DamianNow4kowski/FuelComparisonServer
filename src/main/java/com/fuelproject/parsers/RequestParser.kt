@@ -27,20 +27,23 @@ object RequestParser {
 
     private fun parseURI(): MutableMap<String, String> {
         val uri: URI? = exchange.requestURI
-        return parse(uri!!.rawQuery)
+        return parse(uri?.rawQuery)
     }
 
-    private fun parse(value: String): MutableMap<String, String> {
+    private fun parse(value: String?): MutableMap<String, String> {
         val container: MutableMap<String, String> = HashMap()
-        for (param in value.split("&").toTypedArray()) {
-            val pair = param.split("=")
-            if (pair.size > 1) {
-                container[pair[0]] = decode(pair[1])
-            } else {
-                container[pair[0]] = ""
+        if (value != null) {
+            for (param in value.split("&").toTypedArray()) {
+                val pair = param.split("=")
+                if (pair.size > 1) {
+                    container[pair[0]] = decode(pair[1])
+                } else {
+                    container[pair[0]] = ""
+                }
             }
-        }
-        return container
+            return container
+        } else
+            return container
     }
 
     private fun decode(value: String): String {

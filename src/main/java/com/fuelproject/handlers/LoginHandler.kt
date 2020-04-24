@@ -3,18 +3,20 @@ package com.fuelproject.handlers
 import com.fuelproject.data.UserInfo
 import com.mysql.cj.util.StringUtils.isNullOrEmpty
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.*
 
 
 class LoginHandler : HttpHandler() {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     @Throws(IOException::class)
     override fun handle() {
-        val email = params!!.bodyParams["email"]
-        val password = params!!.bodyParams["password"]
+        val email = params?.bodyParams?.get("email")
+        val password = params?.bodyParams?.get("password")
         if (isNullOrEmpty(email) || isNullOrEmpty(password)) {
-            writeFailResponse("Null or empty input")
-            return
+            return writeFailResponse("Null or empty input")
         }
         tryLogIn(email, password)
     }
