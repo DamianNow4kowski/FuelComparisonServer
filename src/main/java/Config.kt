@@ -4,6 +4,6 @@ object Config {
     const val DB_NAME: String = "mob_java"
     const val DB_USER: String = "root"
     const val DB_PASSWORD: String = ""
-    const val CLEAR_DB_ON_START: Boolean = true
+    const val CLEAR_DB_ON_START: Boolean = false
     const val DB_SQL_FILE: String = "db_export.sql"
 }

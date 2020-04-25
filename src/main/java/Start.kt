@@ -20,7 +20,6 @@ object Start {
         val server = Server(HttpServer.create(InetSocketAddress(Config.SERVER_PORT), 0), databaseHelper)
         server.addContext("/login", LoginHandler())
         server.addContext("/register", RegisterHandler())
-        server.addContext("/remindPassword", RemindPasswordHandler())
         server.addContext("/deleteAccount", DeleteAccountHandler())
         server.addContext("/addStation", AddGasStationHandler())
         server.addContext("/retrieveStations", RetrieveGasStationsHandler())
