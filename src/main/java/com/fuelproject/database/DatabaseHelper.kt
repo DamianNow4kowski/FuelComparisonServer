@@ -243,7 +243,7 @@ object DatabaseHelper {
         }
     }
 
-    //    gaz station
+    //    gas station
     fun addNewGasStation(gasStation: GasStation): Boolean {
         val currentDate = SimpleDateFormat("yyyy-MM-dd").format(Calendar.getInstance().time)
         val insertQuery = "INSERT INTO gas_station(agent_id, name, address, added_on, electric_charging," +
@@ -261,6 +261,7 @@ object DatabaseHelper {
                 statement.setBoolean(7, gasStation.isForDisabledPeople)
                 statement.setDouble(8, gasStation.latitude)
                 statement.setDouble(9, gasStation.longitude)
+                statement.executeUpdate()
 
                 val rs = statement.generatedKeys
                 if (rs.next()) {
@@ -484,8 +485,8 @@ object DatabaseHelper {
 
         return try {
             val stm = db!!.prepareCall(query)
-            stm.setDate(1, Date.valueOf(dtf.format(localDate)));
-            stm.setLong(2, gasStationId);
+            stm.setDate(1, Date.valueOf(dtf.format(localDate)))
+            stm.setLong(2, gasStationId)
             val results = stm.executeQuery()
             val fuels: MutableList<Fuel> = LinkedList()
             while (results.next()) {
