@@ -277,6 +277,59 @@ object DatabaseHelper {
         }
     }
 
+    fun confirmStation(stationId: Long): Int {
+        val query = "UPDATE gas_station SET accepted = NOT accepted WHERE station_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, stationId)
+            stm.executeUpdate()
+            if (isStationAccepted(stationId)) 1 else 0
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            -1
+        }
+    }
+
+    private fun isStationAccepted(stationId: Long): Boolean {
+        val query = "SELECT accepted FROM gas_station WHERE station_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, stationId)
+            val result = stm.executeQuery()
+            if (result.first()) {
+                val isAccepted = result.getBoolean("accepted")
+                result.close()
+                isAccepted
+            } else {
+                result.close()
+                false
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
+    fun isUserAdmin(userId: Long): Boolean {
+        val query = "SELECT superuser FROM user WHERE user_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userId)
+            val result = stm.executeQuery()
+            if (result.first()) {
+                val isAdmin = result.getBoolean("superuser")
+                result.close()
+                isAdmin
+            } else {
+                result.close()
+                false
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     //    comment
     open fun getComments(gasStationId: Long): MutableList<Comment> {
         val query = "SELECT * FROM comment WHERE station_id = ?"

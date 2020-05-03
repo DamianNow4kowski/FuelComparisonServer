@@ -36,6 +36,7 @@ abstract class HttpHandler : HttpHandler {
         val responseRaw = response.toByteArray(charset("UTF-8"))
         request!!.sendResponseHeaders(200, responseRaw.size.toLong())
         val os: OutputStream = request!!.responseBody
+        logger.info("Response: ${response}")
         os.write(responseRaw)
         os.close()
     }

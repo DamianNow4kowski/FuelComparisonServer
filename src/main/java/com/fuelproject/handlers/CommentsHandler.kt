@@ -2,11 +2,14 @@ package com.fuelproject.handlers
 
 
 import com.google.gson.Gson
+import org.slf4j.LoggerFactory
 import java.io.IOException
 import java.util.*
 
 
 class CommentsHandler : HttpHandler() {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     @Throws(IOException::class)
     override fun handle() {
         val stationId: Optional<Long> = getStationIdFromParam()

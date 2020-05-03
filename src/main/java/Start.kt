@@ -23,6 +23,7 @@ object Start {
         server.addContext("/deleteAccount", DeleteAccountHandler())
         server.addContext("/addStation", AddGasStationHandler())
         server.addContext("/retrieveStations", RetrieveGasStationsHandler())
+        server.addContext("/confirmStation", ConfirmStationHandler())
         server.addContext("/updateDescription", UpdateStationDescriptionHandler())
         server.addContext("/getFuels", FuelsHandler())
         server.addContext("/getComments", CommentsHandler())
