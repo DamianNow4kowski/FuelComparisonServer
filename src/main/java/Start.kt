@@ -29,6 +29,9 @@ object Start {
         server.addContext("/getComments", CommentsHandler())
         server.addContext("/addComment", SubmitCommentHandler())
         server.addContext("/addFuelPrice", AddFuelPriceHandler())
+        server.addContext("/getFavouriteStations", GetFavouriteGasStations())
+        server.addContext("/toggleGasStationFavourite", ToggleGasStationFavouriteHandler())
+
         server.start()
     }
 

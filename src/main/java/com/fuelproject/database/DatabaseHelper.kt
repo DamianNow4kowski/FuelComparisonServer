@@ -607,4 +607,74 @@ object DatabaseHelper {
         }
     }
 
+    fun getFavouriteGasStations(userId: Long): List<GasStation>? {
+        val query = "SELECT * FROM favourite_gas_stations fgs " +
+                "INNER JOIN gas_station gs ON fgs.station_id = gs.station_id " +
+                "WHERE fgs.user_id = ?"
+        val gasStations: MutableList<GasStation> = LinkedList()
+        try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userId)
+            val result = stm.executeQuery()
+            while (result.next()) {
+                val gasStation = GasStation()
+                gasStation.id = result.getInt("station_id").toLong()
+                gasStation.name = result.getString("name")
+                gasStation.address = result.getString("address")
+                gasStation.isForElectricCars = result.getBoolean("electric_charging")
+                gasStation.isForDisabledPeople = result.getBoolean("for_disabled_people")
+                gasStation.longitude = result.getDouble("lng")
+                gasStation.latitude = result.getDouble("lat")
+                fillGasStationsOpeningHours(gasStation)
+                gasStations.add(gasStation)
+            }
+            result.close()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+        return gasStations
+    }
+
+    fun isGasStationFavourite(userId: Long, gasStationId: Long): Boolean {
+        val query = "SELECT * FROM favourite_gas_stations WHERE station_id = ? AND user_id = ?"
+        var isFav = false
+        try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, gasStationId)
+            stm.setLong(2, userId)
+            val result = stm.executeQuery()
+            isFav = result.next()
+            result.close()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+        return isFav
+    }
+
+    fun insertGasStationFavourite(userId: Long, gasStationId: Long) {
+        val query = "INSERT INTO `favourite_gas_stations` (`user_id`, `station_id`) VALUES (?, ?);"
+        try {
+            db!!.prepareCall(query).use { stm ->
+                stm.setLong(1, userId)
+                stm.setLong(2, gasStationId)
+                stm.executeUpdate()
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+    }
+
+    fun deleteGasStationFavourite(userId: Long, gasStationId: Long) {
+        val query = "DELETE FROM favourite_gas_stations WHERE user_id = ? AND station_id = ?"
+        try {
+            db!!.prepareCall(query).use { stm ->
+                stm.setLong(1, userId)
+                stm.setLong(2, gasStationId)
+                stm.execute()
+            }
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+    }
+
 }
