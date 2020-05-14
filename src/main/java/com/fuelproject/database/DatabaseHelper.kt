@@ -267,9 +267,10 @@ object DatabaseHelper {
                 if (rs.next()) {
                     newStationId = rs.getInt(1)
                 }
-                return newStationId > 0 &&
-                        addGasStationOpeningHours(newStationId, gasStation.openFrom, gasStation.openTo) &&
-                        addGasStationAvailablePetrol(newStationId, gasStation)
+                addGasStationOpeningHours(newStationId, gasStation.openFrom, gasStation.openTo)
+                addGasStationAvailablePetrol(newStationId, gasStation)
+                return newStationId > 0
+
             }
         } catch (e: SQLException) {
             e.printStackTrace()
@@ -492,16 +493,21 @@ object DatabaseHelper {
     }
 
     private fun addGasStationAvailablePetrol(gasStationId: Int, gasStation: GasStation): Boolean {
-//        String insertQuery = "INSERT INTO fuel_price(station_id, start_time, end_time) VALUES(?, ?, ?)";
-//        try (PreparedStatement statement = db.prepareStatement(insertQuery)) {
-//            statement.setInt(1, gasStationId);
-//            statement.setString(2, openFrom);
-//            statement.setString(3, openTo);
-//            statement.executeUpdate();
-//        } catch (SQLException e) {
-//            e.printStackTrace();
-//            return false;
-//        }
+        val insertQuery = "INSERT INTO available_fuel(station_id, fuel_kind_id) VALUES(?, ?)"
+        for (i in 1..4) {
+            try {
+                val statement: PreparedStatement = db!!.prepareStatement(insertQuery)
+                statement.setInt(1, gasStationId)
+                statement.setString(2, i.toString())
+
+                logger.info(statement.toString())
+
+                statement.executeUpdate()
+            } catch (e: SQLException) {
+                e.printStackTrace()
+                return false
+            }
+        }
         return true
     }
 
