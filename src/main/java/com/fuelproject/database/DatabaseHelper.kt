@@ -536,16 +536,25 @@ object DatabaseHelper {
         val query = "SELECT af.available_fuel_id, fk.name, fp.price " +
                 "FROM available_fuel af " +
                 "JOIN fuel_kind fk ON af.fuel_kind_id = fk.fuel_kind_id " +
-                "LEFT JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id AND fp.added_on = ? " +
+                "LEFT JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id AND " +
+                "fp.fuel_price_id=( SELECT max(fuel_price_id) FROM fuel_price) " +
                 "WHERE af.station_id = ? " +
-                "AND (fp.rating IS NULL " +
-                "OR fp.rating = (SELECT max(rating) FROM fuel_price fp2 where available_fuel_id = af.available_fuel_id))" +
                 "GROUP BY af.available_fuel_id"
+
+//        val query = "SELECT af.available_fuel_id, fk.name, fp.price " +
+//                "FROM available_fuel af " +
+//                "JOIN fuel_kind fk ON af.fuel_kind_id = fk.fuel_kind_id " +
+//                "LEFT JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id AND fp.added_on = ? " +
+//                "WHERE af.station_id = ? " +
+//                "AND (fp.rating IS NULL " +
+//                "OR fp.rating = (SELECT max(rating) FROM fuel_price fp2 where available_fuel_id = af.available_fuel_id))" +
+//                "GROUP BY af.available_fuel_id"
 
         return try {
             val stm = db!!.prepareCall(query)
-            stm.setDate(1, Date.valueOf(dtf.format(localDate)))
-            stm.setLong(2, gasStationId)
+//            stm.setDate(1, Date.valueOf(dtf.format(localDate)))
+//            logger.info(Date.valueOf(dtf.format(localDate)).toString())
+            stm.setLong(1, gasStationId)
             val results = stm.executeQuery()
             val fuels: MutableList<Fuel> = LinkedList()
             while (results.next()) {
@@ -554,8 +563,11 @@ object DatabaseHelper {
                 fuel.price = results.getFloat("price")
                 fuel.name = results.getString("name")
                 fuels.add(fuel)
+                logger.info(results.toString())
             }
             results.close()
+            logger.info(results.toString())
+            logger.info(fuels.toString())
             fuels
         } catch (e: SQLException) {
             e.printStackTrace()
