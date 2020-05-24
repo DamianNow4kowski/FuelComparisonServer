@@ -12,12 +12,9 @@ class GasStation : Serializable {
     var longitude = 0.0
     var openFrom = ""
     var openTo = ""
-    var hasPetrol95 = false
-    var hasPetrol98 = false
-    var hasDieselFuel = false
-    var hasNaturalGas = false
     var isForElectricCars = false
     var isForDisabledPeople = false
+    var fuels : List<Fuel> = emptyList()
 
     override fun toString(): String {
         return "GasStation{" +
@@ -27,6 +24,7 @@ class GasStation : Serializable {
                 ", city='" + city + '\'' +
                 ", isForElectricCars=" + isForElectricCars +
                 ", isForDisabledPeople=" + isForDisabledPeople +
+                ", fuels=" + fuels +
                 '}'
     }
 
