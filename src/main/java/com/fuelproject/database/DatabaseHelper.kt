@@ -695,4 +695,37 @@ object DatabaseHelper {
         }
     }
 
+    fun unlockUser(userId: Long?): Int {
+        val query = "UPDATE user SET active = NOT active WHERE user_id = ?"
+        return try {
+            val stm = db!!.prepareCall(query)
+            stm.setLong(1, userId!!)
+            stm.executeUpdate()
+            if (isUserActive(userId)) 1 else 0
+        } catch (e: SQLException) {
+            e.printStackTrace()
+            -1
+        }
+    }
+
+    fun getAllUsers(): List<UserInfo>? {
+        val query = "SELECT * FROM user"
+        val users: MutableList<UserInfo> = LinkedList()
+        try {
+            val stm = db!!.prepareCall(query)
+            val result = stm.executeQuery()
+            while (result.next()) {
+                val user = UserInfo()
+                user.id = result.getInt("user_id").toLong()
+                user.name = result.getString("username")
+                user.email = result.getString("email")
+                user.active = result.getBoolean("active")
+                users.add(user)
+            }
+            result.close()
+        } catch (e: SQLException) {
+            e.printStackTrace()
+        }
+        return users
+    }
 }

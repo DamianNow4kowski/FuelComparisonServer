@@ -6,4 +6,5 @@ class UserInfo {
     var name: String? = null
     var token: String? = null
     var stationAgentID: Long = 0
+    var active = false
 }

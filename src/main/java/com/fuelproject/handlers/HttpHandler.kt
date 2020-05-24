@@ -15,7 +15,7 @@ import java.net.HttpURLConnection
 abstract class HttpHandler : HttpHandler {
     private val logger = LoggerFactory.getLogger(javaClass)
     private var request: HttpExchange? = null
-    var params: RequestParams? = null
+    public var params: RequestParams? = null
     var dbHelper: DatabaseHelper? = null
 
     @Throws(IOException::class)

@@ -31,6 +31,8 @@ object Start {
         server.addContext("/addFuelPrice", AddFuelPriceHandler())
         server.addContext("/getFavouriteStations", GetFavouriteGasStations())
         server.addContext("/toggleGasStationFavourite", ToggleGasStationFavouriteHandler())
+        server.addContext("/unlockUser", UnlockUserHandler())
+        server.addContext("/getAllUsers", GetAllUsers())
 
         server.start()
     }
