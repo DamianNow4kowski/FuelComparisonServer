@@ -537,7 +537,7 @@ object DatabaseHelper {
                 "FROM available_fuel af " +
                 "JOIN fuel_kind fk ON af.fuel_kind_id = fk.fuel_kind_id " +
                 "LEFT JOIN fuel_price fp ON af.available_fuel_id = fp.available_fuel_id AND " +
-                "fp.fuel_price_id=( SELECT max(fuel_price_id) FROM fuel_price) " +
+                "fp.fuel_price_id=( SELECT max(fuel_price_id) FROM fuel_price WHERE available_fuel_id=af.available_fuel_id) " +
                 "WHERE af.station_id = ? " +
                 "GROUP BY af.available_fuel_id"
 
